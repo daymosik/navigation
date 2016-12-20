@@ -299,8 +299,13 @@ notify router subs location =
 
 spawnPopState : Platform.Router msg Location -> Task x Process.Id
 spawnPopState router =
-  Process.spawn <| onWindow "popstate" Json.value <| \_ ->
-    Platform.sendToSelf router (Native.Navigation.getLocation ())
+  spawnState "hashchange" router
+    &> spawnState "popstate" router
+
+
+spawnState : String -> Platform.Router msg Location -> Task x Process.Id
+spawnState stateName router =
+  Process.spawn (onWindow stateName Json.value (\_ -> Platform.sendToSelf router (Native.Navigation.getLocation ())))
 
 
 go : Int -> Task x ()
