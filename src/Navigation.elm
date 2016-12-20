@@ -1,9 +1,14 @@
-effect module Navigation where { command = MyCmd, subscription = MySub } exposing
-  ( back, forward
-  , newUrl, modifyUrl
-  , program, programWithFlags
-  , Location
-  )
+effect module Navigation
+    where { command = MyCmd, subscription = MySub }
+    exposing
+        ( back
+        , forward
+        , newUrl
+        , modifyUrl
+        , program
+        , programWithFlags
+        , Location
+        )
 
 {-| This is a library for managing browser navigation yourself.
 
@@ -23,14 +28,12 @@ request to your servers. Instead, you manage the changes yourself in Elm.
 
 -}
 
-
 import Dom.LowLevel exposing (onWindow)
 import Html exposing (Html)
 import Json.Decode as Json
 import Native.Navigation
 import Process
 import Task exposing (Task)
-
 
 
 -- PROGRAMS
@@ -53,32 +56,31 @@ includes things exposed by this library, like `back` and `newUrl`, as well as
 whenever the user clicks the back or forward buttons of the browsers. So if
 the URL changes, you will hear about it in your `update` function.
 -}
-program
-  : (Location -> msg)
-  ->
-    { init : Location -> (model, Cmd msg)
-    , update : msg -> model -> (model, Cmd msg)
-    , view : model -> Html msg
-    , subscriptions : model -> Sub msg
-    }
-  -> Program Never model msg
+program :
+    (Location -> msg)
+    -> { init : Location -> ( model, Cmd msg )
+       , update : msg -> model -> ( model, Cmd msg )
+       , view : model -> Html msg
+       , subscriptions : model -> Sub msg
+       }
+    -> Program Never model msg
 program locationToMessage stuff =
-  let
-    subs model =
-      Sub.batch
-        [ subscription (Monitor locationToMessage)
-        , stuff.subscriptions model
-        ]
+    let
+        subs model =
+            Sub.batch
+                [ subscription (Monitor locationToMessage)
+                , stuff.subscriptions model
+                ]
 
-    init =
-      stuff.init (Native.Navigation.getLocation ())
-  in
-    Html.program
-      { init = init
-      , view = stuff.view
-      , update = stuff.update
-      , subscriptions = subs
-      }
+        init =
+            stuff.init (Native.Navigation.getLocation ())
+    in
+        Html.program
+            { init = init
+            , view = stuff.view
+            , update = stuff.update
+            , subscriptions = subs
+            }
 
 
 {-| Works the same as [`program`](#program), but it can also handle flags.
@@ -86,32 +88,31 @@ See [`Html.programWithFlags`][doc] for more information.
 
 [doc]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html#programWithFlags
 -}
-programWithFlags
-  : (Location -> msg)
-  ->
-    { init : flags -> Location -> (model, Cmd msg)
-    , update : msg -> model -> (model, Cmd msg)
-    , view : model -> Html msg
-    , subscriptions : model -> Sub msg
-    }
-  -> Program flags model msg
+programWithFlags :
+    (Location -> msg)
+    -> { init : flags -> Location -> ( model, Cmd msg )
+       , update : msg -> model -> ( model, Cmd msg )
+       , view : model -> Html msg
+       , subscriptions : model -> Sub msg
+       }
+    -> Program flags model msg
 programWithFlags locationToMessage stuff =
-  let
-    subs model =
-      Sub.batch
-        [ subscription (Monitor locationToMessage)
-        , stuff.subscriptions model
-        ]
+    let
+        subs model =
+            Sub.batch
+                [ subscription (Monitor locationToMessage)
+                , stuff.subscriptions model
+                ]
 
-    init flags =
-      stuff.init flags (Native.Navigation.getLocation ())
-  in
-    Html.programWithFlags
-      { init = init
-      , view = stuff.view
-      , update = stuff.update
-      , subscriptions = subs
-      }
+        init flags =
+            stuff.init flags (Native.Navigation.getLocation ())
+    in
+        Html.programWithFlags
+            { init = init
+            , view = stuff.view
+            , update = stuff.update
+            , subscriptions = subs
+            }
 
 
 
@@ -128,7 +129,7 @@ other website!
 -}
 back : Int -> Cmd msg
 back n =
-  command (Jump -n)
+    command (Jump -n)
 
 
 {-| Go forward some number of pages. So `forward 1` goes forward one page, and
@@ -142,7 +143,7 @@ whatever website they visited next!
 -}
 forward : Int -> Cmd msg
 forward n =
-  command (Jump n)
+    command (Jump n)
 
 
 
@@ -158,7 +159,7 @@ making a different choice.
 -}
 newUrl : String -> Cmd msg
 newUrl url =
-  command (New url)
+    command (New url)
 
 
 {-| Modify the current URL. This *will not* add a new entry to the browser
@@ -166,7 +167,7 @@ history. It just changes the one you are on right now.
 -}
 modifyUrl : String -> Cmd msg
 modifyUrl url =
-  command (Modify url)
+    command (Modify url)
 
 
 
@@ -185,18 +186,18 @@ in your `update` function.
 as described [here](https://developer.mozilla.org/en-US/docs/Web/API/Location).
 -}
 type alias Location =
-  { href : String
-  , host : String
-  , hostname : String
-  , protocol : String
-  , origin : String
-  , port_ : String
-  , pathname : String
-  , search : String
-  , hash : String
-  , username : String
-  , password : String
-  }
+    { href : String
+    , host : String
+    , hostname : String
+    , protocol : String
+    , origin : String
+    , port_ : String
+    , pathname : String
+    , search : String
+    , hash : String
+    , username : String
+    , password : String
+    }
 
 
 
@@ -204,120 +205,122 @@ type alias Location =
 
 
 type MyCmd msg
-  = Jump Int
-  | New String
-  | Modify String
+    = Jump Int
+    | New String
+    | Modify String
 
 
 cmdMap : (a -> b) -> MyCmd a -> MyCmd b
 cmdMap _ myCmd =
-  case myCmd of
-    Jump n ->
-      Jump n
+    case myCmd of
+        Jump n ->
+            Jump n
 
-    New url ->
-      New url
+        New url ->
+            New url
 
-    Modify url ->
-      Modify url
+        Modify url ->
+            Modify url
 
 
-type MySub msg =
-  Monitor (Location -> msg)
+type MySub msg
+    = Monitor (Location -> msg)
 
 
 subMap : (a -> b) -> MySub a -> MySub b
 subMap func (Monitor tagger) =
-  Monitor (tagger >> func)
+    Monitor (tagger >> func)
 
 
 (&>) task1 task2 =
-  Task.andThen (\_ -> task2) task1
+    Task.andThen (\_ -> task2) task1
 
 
 type alias State msg =
-  { subs : List (MySub msg)
-  , process : Maybe Process.Id
-  }
+    { subs : List (MySub msg)
+    , process : Maybe Process.Id
+    }
 
 
 init : Task Never (State msg)
 init =
-  Task.succeed (State [] Nothing)
+    Task.succeed (State [] Nothing)
 
 
 onSelfMsg : Platform.Router msg Location -> Location -> State msg -> Task Never (State msg)
 onSelfMsg router location state =
-  notify router state.subs location
-    &> Task.succeed state
+    notify router state.subs location
+        &> Task.succeed state
 
 
 onEffects : Platform.Router msg Location -> List (MyCmd msg) -> List (MySub msg) -> State msg -> Task Never (State msg)
-onEffects router cmds subs {process} =
-  let
-    stepState =
-      case (subs, process) of
-        ([], Just pid) ->
-          Process.kill pid
-            &> Task.succeed (State subs Nothing)
+onEffects router cmds subs { process } =
+    let
+        stepState =
+            case ( subs, process ) of
+                ( [], Just pid ) ->
+                    Process.kill pid
+                        &> Task.succeed (State subs Nothing)
 
-        (_ :: _, Nothing) ->
-          Task.map (State subs << Just) (spawnPopState router)
+                ( _ :: _, Nothing ) ->
+                    Task.map (State subs << Just) (spawnPopState router)
 
-        (_, _) ->
-          Task.succeed (State subs process)
-
-  in
-    Task.sequence (List.map (cmdHelp router subs) cmds)
-      &> stepState
+                ( _, _ ) ->
+                    Task.succeed (State subs process)
+    in
+        Task.sequence (List.map (cmdHelp router subs) cmds)
+            &> stepState
 
 
 cmdHelp : Platform.Router msg Location -> List (MySub msg) -> MyCmd msg -> Task Never ()
 cmdHelp router subs cmd =
-  case cmd of
-    Jump n ->
-      go n
+    case cmd of
+        Jump n ->
+            go n
 
-    New url ->
-      pushState url
-        |> Task.andThen (notify router subs)
+        New url ->
+            pushState url
+                |> Task.andThen (notify router subs)
 
-    Modify url ->
-      replaceState url
-        |> Task.andThen (notify router subs)
+        Modify url ->
+            replaceState url
+                |> Task.andThen (notify router subs)
 
 
 notify : Platform.Router msg Location -> List (MySub msg) -> Location -> Task x ()
 notify router subs location =
-  let
-    send (Monitor tagger) =
-      Platform.sendToApp router (tagger location)
-  in
-    Task.sequence (List.map send subs)
-      &> Task.succeed ()
+    let
+        send (Monitor tagger) =
+            Platform.sendToApp router (tagger location)
+    in
+        Task.sequence (List.map send subs)
+            &> Task.succeed ()
 
 
 spawnPopState : Platform.Router msg Location -> Task x Process.Id
 spawnPopState router =
-  spawnState "hashchange" router
-    &> spawnState "popstate" router
+    spawnState "popstate" router
+        &> if Native.Navigation.needsHashchange () then
+            spawnState "hashchange" router
+           else
+            spawnState "" router
 
 
 spawnState : String -> Platform.Router msg Location -> Task x Process.Id
 spawnState stateName router =
-  Process.spawn (onWindow stateName Json.value (\_ -> Platform.sendToSelf router (Native.Navigation.getLocation ())))
+    Process.spawn (onWindow stateName Json.value (\_ -> Platform.sendToSelf router (Native.Navigation.getLocation ())))
 
 
 go : Int -> Task x ()
 go =
-  Native.Navigation.go
+    Native.Navigation.go
 
 
 pushState : String -> Task x Location
 pushState =
-  Native.Navigation.pushState
+    Native.Navigation.pushState
 
 
 replaceState : String -> Task x Location
 replaceState =
-  Native.Navigation.replaceState
+    Native.Navigation.replaceState
